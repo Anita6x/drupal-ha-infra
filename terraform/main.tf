@@ -61,10 +61,10 @@ module "ec2" {
   ami_id            = var.ami_id
   key_name          = var.key_name
 
-  db_endpoint  = module.rds.db_endpoint
-  db_name      = var.db_name
-  db_username  = var.db_username
-  db_password  = var.db_password
+  db_endpoint = module.rds.db_endpoint
+  db_name     = var.db_name
+  db_username = var.db_username
+  db_password = var.db_password
 }
 
 # STEP 4 ✅ — RDS DATABASE

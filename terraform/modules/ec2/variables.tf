@@ -36,8 +36,8 @@ variable "ami_id" {
     We use Ubuntu 22.04 LTS in us-east-1.
     ami-0261755bbcb8c4a84 is the official Ubuntu 22.04 AMI.
   EOT
-  type    = string
-  default = "ami-0261755bbcb8c4a84"
+  type        = string
+  default     = "ami-0261755bbcb8c4a84"
 }
 
 variable "key_name" {
@@ -46,7 +46,7 @@ variable "key_name" {
     You will create this in the AWS Console before running apply.
     We'll walk through that below.
   EOT
-  type = string
+  type        = string
 }
 
 variable "db_endpoint" {

@@ -4,7 +4,7 @@ output "alb_dns_name" {
     Paste this into your browser to visit your Drupal site.
     Looks like: drupal-dev-alb-123456.us-east-1.elb.amazonaws.com
   EOT
-  value = aws_lb.main.dns_name
+  value       = aws_lb.main.dns_name
 }
 
 output "alb_arn" {

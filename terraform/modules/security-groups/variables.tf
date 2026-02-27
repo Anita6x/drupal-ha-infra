@@ -25,5 +25,5 @@ variable "your_ip" {
     Format: "YOUR.IP.ADDRESS.HERE/32"
     The /32 means just this one exact IP address.
   EOT
-  type = string
+  type        = string
 }

@@ -138,7 +138,7 @@ resource "aws_route_table_association" "private_b" {
 # use. We give it both private subnets (2 AZs)
 # even though MySQL only runs in one of them.
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.project_name}-${var.environment}-db-subnet-group"
+  name = "${var.project_name}-${var.environment}-db-subnet-group"
   subnet_ids = [
     aws_subnet.private_a.id,
     aws_subnet.private_b.id

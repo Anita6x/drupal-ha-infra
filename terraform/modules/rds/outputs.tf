@@ -4,8 +4,8 @@ output "db_endpoint" {
     Looks like: drupal-dev-mysql.abc123.us-east-1.rds.amazonaws.com
     EC2 uses this to connect to MySQL.
   EOT
-  value     = aws_db_instance.mysql.endpoint
-  sensitive = true
+  value       = aws_db_instance.mysql.endpoint
+  sensitive   = true
 }
 
 output "db_host" {

@@ -25,3 +25,10 @@ docker/drupal_files/
 
 *.key
 
+
+# Swap files
+*.swp
+*.save
+
+# Lock info files
+*.tfstate.lock.info

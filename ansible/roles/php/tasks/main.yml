@@ -1,0 +1,44 @@
+---
+- name: Install PHP 8.2 and required extensions
+  apt:
+    name:
+      - php8.2
+      - php8.2-fpm
+      - php8.2-mysql
+      - php8.2-curl
+      - php8.2-gd
+      - php8.2-mbstring
+      - php8.2-xml
+      - php8.2-zip
+      - php8.2-intl
+      - php8.2-opcache
+      - php8.2-soap
+    state: present
+    update_cache: yes
+
+- name: Ensure PHP-FPM is started and enabled
+  service:
+    name: php8.2-fpm
+    state: started
+    enabled: yes
+
+- name: Set PHP memory limit for Drupal
+  lineinfile:
+    path: /etc/php/8.2/fpm/php.ini
+    regexp: "^memory_limit"
+    line: "memory_limit = 256M"
+  notify: Restart PHP-FPM
+
+- name: Set PHP max execution time
+  lineinfile:
+    path: /etc/php/8.2/fpm/php.ini
+    regexp: "^max_execution_time"
+    line: "max_execution_time = 60"
+  notify: Restart PHP-FPM
+
+- name: Set PHP upload max filesize
+  lineinfile:
+    path: /etc/php/8.2/fpm/php.ini
+    regexp: "^upload_max_filesize"
+    line: "upload_max_filesize = 32M"
+  notify: Restart PHP-FPM

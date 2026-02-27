@@ -1,0 +1,51 @@
+<?php
+
+/**
+ * Database settings
+ */
+$databases['default']['default'] = [
+  'driver'   => 'mysql',
+  'database' => '{{ db_name }}',
+  'username' => '{{ db_user }}',
+  'password' => '{{ db_password }}',
+  'host'     => '{{ db_host }}',
+  'port'     => '3306',
+  'prefix'   => '',
+  'namespace' => 'Drupal\Core\Database\Driver\mysql',
+  'driver'    => 'mysql',
+];
+
+/**
+ * Salt for one-time login links and cancel links
+ * Drupal generates this automatically during install
+ */
+$settings['hash_salt'] = '{{ lookup("password", "/dev/null chars=ascii_letters,digits length=55") }}';
+
+/**
+ * Trusted host patterns
+ * Tells Drupal which URLs are valid for this site
+ */
+$settings['trusted_host_patterns'] = [
+  '^localhost$',
+  '^127\.0\.0\.1$',
+  '^{{ ansible_host }}$',
+];
+
+/**
+ * File system paths
+ */
+$settings['file_public_path'] = 'sites/default/files';
+$settings['file_private_path'] = '';
+
+/**
+ * Config sync directory
+ */
+$settings['config_sync_directory'] = '../config/sync';
+
+/**
+ * Load local settings if they exist
+ * Useful for environment-specific overrides
+ */
+if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
+  include $app_root . '/' . $site_path . '/settings.local.php';
+}

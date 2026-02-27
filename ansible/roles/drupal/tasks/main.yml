@@ -1,0 +1,107 @@
+---
+- name: Install required system packages
+  apt:
+    name:
+      - git
+      - curl
+      - unzip
+      - mysql-client
+    state: present
+    update_cache: yes
+
+- name: Install Composer
+  shell: |
+    curl -sS https://getcomposer.org/installer | php
+    mv composer.phar /usr/local/bin/composer
+    chmod +x /usr/local/bin/composer
+  args:
+    creates: /usr/local/bin/composer
+
+- name: Check if Drupal is already downloaded
+  stat:
+    path: "{{ drupal_root }}/composer.json"
+  register: drupal_composer
+
+- name: Download Drupal 10 via Composer
+  composer:
+    command: create-project
+    arguments: drupal/recommended-project:^10 {{ drupal_root }}
+    working_dir: /var/www/html
+    no_dev: yes
+  become_user: www-data
+  when: not drupal_composer.stat.exists
+
+- name: Install Drush (Drupal CLI tool)
+  composer:
+    command: require
+    arguments: drush/drush
+    working_dir: "{{ drupal_root }}"
+  become_user: www-data
+
+- name: Set correct ownership on Drupal files
+  file:
+    path: "{{ drupal_root }}"
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: Create Drupal files directory
+  file:
+    path: "{{ drupal_root }}/web/sites/default/files"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Copy default settings file
+  copy:
+    src: "{{ drupal_root }}/web/sites/default/default.settings.php"
+    dest: "{{ drupal_root }}/web/sites/default/settings.php"
+    owner: www-data
+    group: www-data
+    mode: "0644"
+    remote_src: yes
+    force: no
+
+- name: Deploy Drupal settings.php
+  template:
+    src: settings.php.j2
+    dest: "{{ drupal_root }}/web/sites/default/settings.php"
+    owner: www-data
+    group: www-data
+    mode: "0644"
+
+- name: Check if Drupal is already installed
+  shell: |
+    {{ drupal_root }}/vendor/bin/drush \
+    --root={{ drupal_root }}/web \
+    status
+  register: drupal_status
+  ignore_errors: yes
+  become_user: www-data
+
+- name: Install Drupal site
+  shell: |
+    {{ drupal_root }}/vendor/bin/drush \
+    --root={{ drupal_root }}/web \
+    site-install standard \
+    --db-url=mysql://{{ db_user }}:{{ db_password }}@{{ db_host }}/{{ db_name }} \
+    --site-name="{{ drupal_site_name }}" \
+    --account-name={{ drupal_admin_user }} \
+    --account-pass={{ drupal_admin_password }} \
+    --account-mail={{ drupal_admin_email }} \
+    --yes
+  become_user: www-data
+  when: "'Successful' not in drupal_status.stdout"
+
+- name: Set final permissions on settings.php
+  file:
+    path: "{{ drupal_root }}/web/sites/default/settings.php"
+    mode: "0444"
+
+- name: Clear Drupal cache
+  shell: |
+    {{ drupal_root }}/vendor/bin/drush \
+    --root={{ drupal_root }}/web \
+    cache:rebuild
+  become_user: www-data

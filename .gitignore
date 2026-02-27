@@ -1,0 +1,27 @@
+
+# Terraform secrets
+
+terraform/.terraform/
+
+terraform/terraform.tfstate
+
+terraform/terraform.tfstate.backup
+
+terraform/.terraform.lock.hcl
+
+terraform/terraform.tfvars
+
+# Ansible secrets
+
+ansible/inventory.ini
+
+# Docker
+
+docker/drupal_files/
+
+# SSH Keys
+
+*.pem
+
+*.key
+

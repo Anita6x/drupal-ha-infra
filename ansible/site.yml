@@ -1,0 +1,24 @@
+---
+- name: Configure Drupal Server
+  hosts: drupal_servers
+  become: true  # Run commands as sudo
+
+  vars:
+    # Database connection details
+    db_host: "drupal-dev-mysql.cspiscw0kt0k.us-east-1.rds.amazonaws.com"
+    db_name: "drupal"
+    db_user: "drupal"
+    db_password: "DrupalPass2024"
+
+    # Drupal settings
+    drupal_version: "10.2.3"
+    drupal_root: "/var/www/html/drupal"
+    drupal_site_name: "My Drupal Site"
+    drupal_admin_user: "admin"
+    drupal_admin_password: "Admin123456!"
+    drupal_admin_email: "admin@example.com"
+
+  roles:
+    - php        # Step 1 — install PHP extensions
+    - nginx      # Step 2 — configure Nginx for Drupal
+    - drupal     # Step 3 — install and configure Drupal

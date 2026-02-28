@@ -209,8 +209,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           metrics = [
             ["AWS/EC2", "CPUUtilization", "InstanceId", var.ec2_instance_id]
           ]
-          view = "timeSeries"
-          stat = "Average"
+          view  = "timeSeries"
+          stat  = "Average"
           yAxis = { left = { min = 0, max = 100 } }
         }
       },

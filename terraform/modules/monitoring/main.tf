@@ -199,22 +199,28 @@ resource "aws_cloudwatch_dashboard" "main" {
   dashboard_body = jsonencode({
     widgets = [
       {
-        type = "metric"
+        type   = "metric"
+        width  = 12
+        height = 6
         properties = {
           title  = "EC2 CPU Utilization"
+          region = "us-east-1"
           period = 300
           metrics = [
             ["AWS/EC2", "CPUUtilization", "InstanceId", var.ec2_instance_id]
           ]
-          view  = "timeSeries"
-          stat  = "Average"
+          view = "timeSeries"
+          stat = "Average"
           yAxis = { left = { min = 0, max = 100 } }
         }
       },
       {
-        type = "metric"
+        type   = "metric"
+        width  = 12
+        height = 6
         properties = {
           title  = "RDS CPU Utilization"
+          region = "us-east-1"
           period = 300
           metrics = [
             ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.rds_instance_id]
@@ -224,9 +230,12 @@ resource "aws_cloudwatch_dashboard" "main" {
         }
       },
       {
-        type = "metric"
+        type   = "metric"
+        width  = 12
+        height = 6
         properties = {
           title  = "RDS Free Storage Space"
+          region = "us-east-1"
           period = 300
           metrics = [
             ["AWS/RDS", "FreeStorageSpace", "DBInstanceIdentifier", var.rds_instance_id]
@@ -236,9 +245,12 @@ resource "aws_cloudwatch_dashboard" "main" {
         }
       },
       {
-        type = "metric"
+        type   = "metric"
+        width  = 12
+        height = 6
         properties = {
           title  = "ALB Request Count"
+          region = "us-east-1"
           period = 300
           metrics = [
             ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", var.alb_arn_suffix]
@@ -248,9 +260,12 @@ resource "aws_cloudwatch_dashboard" "main" {
         }
       },
       {
-        type = "metric"
+        type   = "metric"
+        width  = 12
+        height = 6
         properties = {
           title  = "ALB 5XX Errors"
+          region = "us-east-1"
           period = 300
           metrics = [
             ["AWS/ApplicationELB", "HTTPCode_ELB_5XX_Count", "LoadBalancer", var.alb_arn_suffix]
@@ -260,9 +275,12 @@ resource "aws_cloudwatch_dashboard" "main" {
         }
       },
       {
-        type = "metric"
+        type   = "metric"
+        width  = 12
+        height = 6
         properties = {
           title  = "ALB Healthy vs Unhealthy Hosts"
+          region = "us-east-1"
           period = 60
           metrics = [
             ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", var.alb_arn_suffix, "TargetGroup", var.target_group_arn_suffix],

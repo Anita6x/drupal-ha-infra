@@ -14,11 +14,9 @@ env:
 
 jobs:
 
-  # ── Job 1: Validate ───────────────────────
   validate:
     name: Validate Code
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,20 +44,14 @@ jobs:
           cd terraform
           terraform validate
 
-      - name: Validate Ansible Playbook
-        run: |
-          pip install ansible
-          ansible-playbook ansible/site.yml --syntax-check \
-            -i "localhost," \
-            --extra-vars "drupal_root=/tmp db_host=localhost db_name=drupal db_user=drupal db_password=test drupal_site_name=test drupal_admin_user=admin drupal_admin_password=test drupal_admin_email=test@test.com"
-
-
-  # ── Job 2: Build Docker Image ─────────────
   build:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
     needs: validate
     if: github.ref == 'refs/heads/main'
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+      ecr_registry: ${{ steps.login-ecr.outputs.registry }}
 
     steps:
       - name: Checkout code
@@ -85,6 +77,10 @@ jobs:
             --repository-name $ECR_REPOSITORY \
             --region $AWS_REGION
 
+      - name: Set image tag
+        id: meta
+        run: echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -92,22 +88,11 @@ jobs:
         run: |
           cd docker
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+                     $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          echo "IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
-      - name: Save image tag for deploy job
-        run: echo "${{ github.sha }}" > image-tag.txt
-
-      - name: Upload image tag artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-tag
-          path: image-tag.txt
-
-
-  # ── Job 3: Deploy ─────────────────────────
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
@@ -123,33 +108,54 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/drupal-key.pem
           chmod 400 ~/.ssh/drupal-key.pem
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -t ed25519 -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          echo "Host ${{ secrets.EC2_HOST }}" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "  UserKnownHostsFile /dev/null" >> ~/.ssh/config
 
-      - name: Install Ansible
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Deploy to EC2 via SSH
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DRUPAL_ADMIN_PASS: ${{ secrets.DRUPAL_ADMIN_PASS }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
         run: |
-          pip install ansible
-
-      - name: Create inventory file
-        run: |
-          cat > ansible/inventory.ini << EOF
-          [drupal_servers]
-          ${{ secrets.EC2_HOST }}
-
-          [drupal_servers:vars]
-          ansible_user=${{ secrets.EC2_USER }}
-          ansible_ssh_private_key_file=~/.ssh/drupal-key.pem
-          ansible_python_interpreter=/usr/bin/python3
-          EOF
-
-      - name: Run Ansible Playbook
-        run: |
-          cd ansible
-          ansible-playbook -i inventory.ini site.yml \
-            --extra-vars "db_password=${{ secrets.DB_PASSWORD }}" \
-            --extra-vars "drupal_admin_password=${{ secrets.DRUPAL_ADMIN_PASS }}"
+          ssh -i ~/.ssh/drupal-key.pem \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ubuntu@${{ secrets.EC2_HOST }} << 'ENDSSH'
+          aws ecr get-login-password --region us-east-1 | \
+            docker login --username AWS \
+            --password-stdin $ECR_REGISTRY
+          docker pull $ECR_REGISTRY/drupal-app:$IMAGE_TAG
+          cd ~/drupal-ha-infra/docker
+          docker-compose -f docker-compose.prod.yml down || true
+          ECR_REGISTRY=$ECR_REGISTRY \
+          ECR_REPOSITORY=drupal-app \
+          IMAGE_TAG=$IMAGE_TAG \
+          DB_PASSWORD=$DB_PASSWORD \
+          DB_HOST=$DB_HOST \
+          DRUPAL_ADMIN_PASS=$DRUPAL_ADMIN_PASS \
+          MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
+          docker-compose -f docker-compose.prod.yml up -d
+          docker image prune -f
+          ENDSSH
 
       - name: Verify deployment
         run: |
-          sleep 10
+          sleep 15
           curl -f http://${{ secrets.EC2_HOST }} || exit 1
           echo "Deployment successful!"

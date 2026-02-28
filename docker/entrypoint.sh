@@ -11,8 +11,8 @@ echo "MySQL is ready!"
 DRUPAL_ROOT=/var/www/html/drupal
 export DRUSH_NO_MIN_PHP=1
 
-# Install Drupal if not already installed
-if ! $DRUPAL_ROOT/vendor/bin/drush --root=$DRUPAL_ROOT/web status | grep -q "Successful"; then
+# Check if settings.php exists
+if [ ! -f "$DRUPAL_ROOT/web/sites/default/settings.php" ]; then
   echo "Installing Drupal..."
   $DRUPAL_ROOT/vendor/bin/drush --root=$DRUPAL_ROOT/web site-install standard \
     --db-url="mysql://$DB_USER:$DB_PASSWORD@$DB_HOST/$DB_NAME" \
@@ -22,6 +22,10 @@ if ! $DRUPAL_ROOT/vendor/bin/drush --root=$DRUPAL_ROOT/web status | grep -q "Suc
     --account-mail="$DRUPAL_ADMIN_EMAIL" \
     --yes
   echo "Drupal installed!"
+else
+  echo "Drupal already installed, skipping installation..."
+  # Just clear cache
+  $DRUPAL_ROOT/vendor/bin/drush --root=$DRUPAL_ROOT/web cache:rebuild || true
 fi
 
 # Start services via Supervisor

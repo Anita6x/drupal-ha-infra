@@ -2,10 +2,7 @@
 set -e
 
 echo "Waiting for MySQL to be ready..."
-until php -r "
-  \$conn = @mysqli_connect('$DB_HOST', '$DB_USER', '$DB_PASSWORD');
-  if (\$conn) { exit(0); } else { exit(1); }
-" 2>/dev/null; do
+until nc -z "$DB_HOST" 3306 2>/dev/null; do
   echo "MySQL not ready yet, retrying..."
   sleep 3
 done

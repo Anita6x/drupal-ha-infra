@@ -27,6 +27,7 @@ RUN apk add --no-cache \
     curl \
     unzip \
     supervisor \
+    netcat-openbsd \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \

@@ -63,3 +63,8 @@ output "alb_dns_name" {
   description = "Your Drupal site URL — paste this into your browser!"
   value       = module.alb.alb_dns_name
 }
+
+output "dashboard_url" {
+  description = "CloudWatch dashboard URL"
+  value       = module.monitoring.dashboard_url
+}

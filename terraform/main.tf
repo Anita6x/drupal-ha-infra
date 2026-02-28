@@ -93,3 +93,18 @@ module "alb" {
   alb_security_group_id = module.security_groups.alb_sg_id
   ec2_instance_id       = module.ec2.instance_id
 }
+
+# ══════════════════════════════════════════════
+# STEP 9 ✅ — MONITORING
+# ══════════════════════════════════════════════
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  project_name            = var.project_name
+  environment             = var.environment
+  ec2_instance_id         = module.ec2.instance_id
+  rds_instance_id         = "${var.project_name}-${var.environment}-mysql"
+  alb_arn_suffix          = module.alb.alb_arn_suffix
+  target_group_arn_suffix = module.alb.target_group_arn_suffix
+  alert_email             = var.alert_email
+}

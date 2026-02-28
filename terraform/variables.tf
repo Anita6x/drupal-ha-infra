@@ -98,3 +98,8 @@ variable "db_instance_class" {
   type        = string
   default     = "db.t3.micro"
 }
+
+variable "alert_email" {
+  description = "Email address for CloudWatch alerts"
+  type        = string
+}

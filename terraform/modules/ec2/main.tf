@@ -1,3 +1,4 @@
+
 # ── IAM ROLE FOR EC2 ──────────────────────────
 # This gives the EC2 instance permission to talk
 # to other AWS services like CloudWatch for logs.
@@ -19,6 +20,11 @@ resource "aws_iam_role" "ec2" {
   tags = {
     Name = "${var.project_name}-${var.environment}-ec2-role"
   }
+}
+
+resource "aws_iam_role_policy_attachment" "ecr" {
+  role       = aws_iam_role.ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
 # Attach CloudWatch policy so EC2 can send logs

@@ -8,7 +8,7 @@
     db_host: "drupal-dev-mysql.cspiscw0kt0k.us-east-1.rds.amazonaws.com"
     db_name: "drupal"
     db_user: "drupal"
-    db_password: "DrupalPass2024"
+    db_password: "Drupal123456"
 
     # Drupal settings
     drupal_version: "10.2.3"

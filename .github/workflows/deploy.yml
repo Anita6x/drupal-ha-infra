@@ -156,6 +156,6 @@ jobs:
 
       - name: Verify deployment
         run: |
-          sleep 15
-          curl -f http://${{ secrets.EC2_HOST }} || exit 1
+          sleep 30
+          curl -f http://${{ secrets.ALB_DNS }} || exit 1
           echo "Deployment successful!"

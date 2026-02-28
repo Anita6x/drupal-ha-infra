@@ -9,6 +9,7 @@ done
 echo "MySQL is ready!"
 
 DRUPAL_ROOT=/var/www/html/drupal
+export DRUSH_NO_MIN_PHP=1
 
 # Install Drupal if not already installed
 if ! $DRUPAL_ROOT/vendor/bin/drush --root=$DRUPAL_ROOT/web status | grep -q "Successful"; then
